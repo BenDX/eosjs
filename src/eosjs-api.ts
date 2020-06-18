@@ -211,8 +211,8 @@ export class Api {
      *      use it as a reference for TAPoS, and expire the transaction `expireSeconds` after that block's time.
      * @returns node response if `broadcast`, `{signatures, serializedTransaction}` if `!broadcast`
      */
-    public async transact(transaction: any, { broadcast = true, sign = true, blocksBehind, expireSeconds }:
-        { broadcast?: boolean; sign?: boolean; blocksBehind?: number; expireSeconds?: number; } = {}): Promise<any> {
+    public async transact(transaction: any, { broadcast = true, sign = true, blocksBehind, expireSeconds, refIrreversibleBlock = false }:
+        { broadcast?: boolean; sign?: boolean; blocksBehind?: number; expireSeconds?: number; refIrreversibleBlock?: boolean} = {}): Promise<any> {
         let info: GetInfoResult;
 
         if (!this.chainId) {
@@ -224,12 +224,17 @@ export class Api {
             if (!info) {
                 info = await this.rpc.get_info();
             }
-            const refBlock = await this.rpc.get_block(info.head_block_num - blocksBehind);
-            transaction = { ...ser.transactionHeader(refBlock, expireSeconds), ...transaction };
-        }
 
-        if (!this.hasRequiredTaposFields(transaction)) {
-            throw new Error('Required configuration or TAPOS fields are not present');
+            let refBlock;
+            if (refIrreversibleBlock) {
+                refBlock = await this.rpc.get_block(info.last_irreversible_block_num);
+            } else {
+                if (!this.hasRequiredTaposFields(transaction)) {
+                    throw new Error('Required configuration or TAPOS fields are not present');
+                }
+                refBlock = await this.rpc.get_block(info.head_block_num - blocksBehind);
+            }
+            transaction = { ...ser.transactionHeader(refBlock, expireSeconds), ...transaction };
         }
 
         const abis: BinaryAbi[] = await this.getTransactionAbis(transaction);
