@@ -4,7 +4,7 @@ base on eosjs v20.0.3.
 when it set to `true`, will let eosjs ref last irreversible block
 and may prevent "Invalid Reference Block" error
 
-the origin v20.0.3 is use (head_block - blocksBehind). this may cause "Invalid Reference Block" error when your ref block been rollback (but more secure on relay attack)
+the origin v20.0.3 is use `(head_block - blocksBehind)`. this may cause "Invalid Reference Block" error when your ref block been rollback (but more secure on relay attack)
 
 ### Sending a transaction
 
