@@ -1,74 +1,17 @@
-# eosjs ![npm](https://img.shields.io/npm/dw/eosjs.svg)
+### Feature
+base on eosjs v20.0.3. 
+`transact()` added a new optionally parameter: `refIrreversibleBlock`
+when it set to `true`, will let eosjs ref last irreversible block
+and may prevent "Invalid Reference Block" error
 
-Javascript API for integration with EOSIO-based blockchains using [EOSIO RPC API](https://developers.eos.io/eosio-nodeos/reference).
-
-Documentation can be found [here](https://eosio.github.io/eosjs)
-
-## Installation
-
-### NPM
-
-The official distribution package can be found at [npm](https://www.npmjs.com/package/eosjs).
-
-### Add dependency to your project
-
-`yarn add eosjs`
-
-### Browser Distribution
-
-Clone this repository locally then run `yarn build-web`.  The browser distribution will be located in `dist-web` and can be directly copied into your project repository. The `dist-web` folder contains minified bundles ready for production, along with source mapped versions of the library for debugging.  For full browser usage examples, [see the documentation](https://eosio.github.io/eosjs/guides/1.-Browsers.html).
-
-## Import
-
-### ES Modules
-
-Importing using ESM syntax is supported using TypeScript, [webpack](https://webpack.js.org/api/module-methods), or  [Node.js with `--experimental-modules` flag](https://nodejs.org/api/esm.html)
-```js
-import { Api, JsonRpc, RpcError } from 'eosjs';
-import { JsSignatureProvider } from 'eosjs/dist/eosjs-jssig';           // development only
 ```
-
-### CommonJS
-
-Importing using commonJS syntax is supported by Node.js out of the box.
-```js
-const { Api, JsonRpc, RpcError } = require('eosjs');
-const { JsSignatureProvider } = require('eosjs/dist/eosjs-jssig');      // development only
-const fetch = require('node-fetch');                                    // node only; not needed in browsers
-const { TextEncoder, TextDecoder } = require('util');                   // node only; native TextEncoder/Decoder
-const { TextEncoder, TextDecoder } = require('text-encoding');          // React Native, IE11, and Edge Browsers only
-```
-
-## Basic Usage
-
-### Signature Provider
-
-The Signature Provider holds private keys and is responsible for signing transactions.
-
-***Using the JsSignatureProvider in the browser is not secure and should only be used for development purposes. Use a secure vault outside of the context of the webpage to ensure security when signing transactions in production***
-
-```js
-const defaultPrivateKey = "5JtUScZK2XEp3g9gh7F8bwtPTRAkASmNrrftmx4AxDKD5K4zDnr"; // bob
-const signatureProvider = new JsSignatureProvider([defaultPrivateKey]);
-```
-
-### JSON-RPC
-
-Open a connection to JSON-RPC, include `fetch` when on Node.js.
-```js
-const rpc = new JsonRpc('http://127.0.0.1:8888', { fetch });
-```
-
-### API
-
-Include textDecoder and textEncoder when using in Node, React Native, IE11 or Edge Browsers.
-```js
-const api = new Api({ rpc, signatureProvider, textDecoder: new TextDecoder(), textEncoder: new TextEncoder() });
+the origin v20.0.3 is use (head_block - blocksBehind). this may cause "Invalid Reference Block" error when your ref block been rollback (but more secure on relay attack)
 ```
 
 ### Sending a transaction
 
-`transact()` is used to sign and push transactions onto the blockchain with an optional configuration object parameter.  This parameter can override the default value of `broadcast: true`, and can be used to fill TAPOS fields given `blocksBehind` and `expireSeconds`.  Given no configuration options, transactions are expected to be unpacked with TAPOS fields (`expiration`, `ref_block_num`, `ref_block_prefix`) and will automatically be broadcast onto the chain.
+Same as origin `transact()`, but you can set `refIrreversibleBlock: true` to use 
+last irreversible block as ref block. if no set `expireSecond` it will default as `60 * 60` seconds.
 
 ```js
 (async () => {
@@ -88,14 +31,15 @@ const api = new Api({ rpc, signatureProvider, textDecoder: new TextDecoder(), te
       },
     }]
   }, {
-    blocksBehind: 3,
-    expireSeconds: 30,
+    // blocksBehind: 3,
+    // expireSeconds: 30,
+    refIrreversibleBlock: true,
   });
   console.dir(result);
 })();
 ```
 
-### Error handling
+### Error handling (same as origin)
 
 use `RpcError` for handling RPC Errors
 ```js
@@ -110,12 +54,6 @@ try {
 }
 ...
 ```
-
-## Contributing
-
-[Contributing Guide](./CONTRIBUTING.md)
-
-[Code of Conduct](./CONTRIBUTING.md#conduct)
 
 ## License
 
